@@ -12,20 +12,12 @@ import io.realm.RealmConfiguration;
  */
 
 public class RealmApplication extends Application {
-
-    private static RealmApplication instance;
-
-
     @Override
     public void onCreate() {
         super.onCreate();
-        instance = this;
-        RealmConfiguration config = new RealmConfiguration.Builder(getApplicationContext()).setModules(new SimpleRealmModule()).build();
-        Realm.setDefaultConfiguration(config);
-    }
-
-    public static RealmApplication getInstance() {
-        return instance;
+        Realm.init(this);
+        RealmConfiguration realmConfiguration = new RealmConfiguration.Builder().build();
+        Realm.setDefaultConfiguration(realmConfiguration);
     }
 }
 

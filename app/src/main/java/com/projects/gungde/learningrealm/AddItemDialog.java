@@ -1,8 +1,8 @@
 package com.projects.gungde.learningrealm;
 
 
+import android.app.DialogFragment;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,9 +10,11 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.projects.gungde.learningrealm.app.RealmApplication;
 import com.projects.gungde.learningrealm.model.Item;
+import com.projects.gungde.learningrealm.realm.table.RealmTable;
 
 import java.util.UUID;
 
@@ -25,7 +27,9 @@ import io.realm.Realm;
 public class AddItemDialog extends DialogFragment implements View.OnClickListener {
 
     private EditText edtAddItem;
+    private TextView txAddItem;
     private Button btnAddItem;
+    private Realm realm;
 
     public AddItemDialog() {
         // Required empty public constructor
@@ -42,13 +46,28 @@ public class AddItemDialog extends DialogFragment implements View.OnClickListene
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_add_item, container, false);
         initComponents(view);
+        setBundle();
         return view;
+    }
+
+    private void setBundle() {
+        if(getArguments()!=null){
+            String id = getArguments().getString(RealmTable.ID);
+            Item result = realm.where(Item.class)
+                    .equalTo(RealmTable.ID, id)
+                    .findFirst();
+            txAddItem.setText("Update Item");
+            btnAddItem.setText("Update");
+            edtAddItem.setText(result.getName());
+        }
     }
 
     private void initComponents(View view) {
         getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        realm = Realm.getDefaultInstance();
         edtAddItem = (EditText) view.findViewById(R.id.edt_item);
         btnAddItem = (Button) view.findViewById(R.id.bt_add_item);
+        txAddItem = (TextView)view.findViewById(R.id.tx_add_item);
         edtAddItem.requestFocus();
         btnAddItem.setOnClickListener(this);
     }
@@ -58,18 +77,25 @@ public class AddItemDialog extends DialogFragment implements View.OnClickListene
         switch (v.getId()) {
             case R.id.bt_add_item: {
                 if (isItemNotNull()) {
-                    Realm realm = Realm.getInstance(RealmApplication.getInstance());
-                    realm.beginTransaction();
-                    Item u = realm.createObject(Item.class);
-                    u.setId(UUID.randomUUID().toString());
-                    u.setName(edtAddItem.getText().toString().trim());
-                    realm.commitTransaction();
+                    addItemByName();
                     AddItemDialog.this.dismiss();
                 }
                 break;
             }
         }
     }
+
+    private void addItemByName() {
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                Item item = new Item();
+                item.setName(edtAddItem.getText().toString().trim());
+                realm.insert(item);
+            }
+        });
+    }
+
 
     private boolean isItemNotNull() {
         return !edtAddItem.getText().toString().isEmpty();

@@ -1,5 +1,7 @@
 package com.projects.gungde.learningrealm.model;
 
+import java.util.UUID;
+
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.Required;
@@ -11,7 +13,7 @@ import io.realm.annotations.Required;
 public class Item extends RealmObject{
 
     @PrimaryKey
-    private String id;
+    private String id = UUID.randomUUID().toString();;
     @Required
     private String name;
 

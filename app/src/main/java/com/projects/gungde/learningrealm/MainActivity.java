@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Toolbar toolbar;
     private RecyclerView rvList;
     private FloatingActionButton fab;
+    private Realm realm;
 
     private List<String> arrays = new ArrayList<>();
     private ItemAdapter adapter;
@@ -47,37 +48,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initComponents() {
+        realm = Realm.getDefaultInstance();
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         fab = (FloatingActionButton) findViewById(R.id.fab);
-        rvList = (RecyclerView) findViewById(R.id.rv_list);
         fab.setOnClickListener(this);
+        rvList = (RecyclerView) findViewById(R.id.rv_list);
         setSupportActionBar(toolbar);
         setRecyclerView();
     }
 
     private void setRecyclerView() {
         rvList.setLayoutManager(new LinearLayoutManager(this));
-        Realm realm = Realm.getInstance(RealmApplication.getInstance());
-        RealmQuery<Item> query = realm.where(Item.class);
-        RealmResults<Item> results = query.findAll();
-        adapter = new ItemAdapter(results);
+        adapter = new ItemAdapter(getResults(),MainActivity.this);
         rvList.setAdapter(adapter);
     }
+
+    private RealmResults<Item> getResults() {
+        RealmQuery<Item> query = realm.where(Item.class);
+        RealmResults<Item> results = query.findAll();
+        return results;
+    }
+
 
     @Override
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.fab :
                 showAddItemDialog();
-//                Snackbar.make(v, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
                 break;
-
         }
     }
 
     private void showAddItemDialog() {
         final AddItemDialog dialog = new AddItemDialog();
-        dialog.show(getSupportFragmentManager(), dialog.getClass().getName());
+        dialog.show(getFragmentManager(), dialog.getClass().getName());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        realm.close();
     }
 }
